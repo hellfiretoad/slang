@@ -42,6 +42,8 @@ The fastest way to get started using Slang in your own development is to use a p
 There are packages built for 32- and 64-bit Windows, as well as 64-bit Ubuntu.
 Each binary release includes the command-line `slangc` compiler, a shared library for the compiler, and the `slang.h` header.
 
+See the [Slang Command Line Options](docs/command-line-slangc-reference.md) for available `slangc` command-line options.
+
 If you would like to build Slang from source, please consult the [build instructions](docs/building.md).
 
 Documentation

@@ -61,12 +61,12 @@ The result of compiling a translation unit is a module in Slang's internal inter
 A translation unit / module may contain zero or more entry points.
 Slang supports two models for identifying entry points when compiling.
 
-### Entry Point Attributes
+#### Entry Point Attributes
 
 By default, the compiler wll scan a translation unit for function declarations marked with the `[shader(...)]` attribute; each such function will be identified as an entry point in the module.
 Developers are encouraged to use this model because it directly documents intention and makes source code less dependent on external compiler configuration options.
 
-### Explicit Entry Point Options
+#### Explicit Entry Point Options
 
 For compatibility with existing code, the Slang compiler also supports explicit specification of entry point functions using configuration options external to shader source code.
 When these options are used the compiler will *ignore* all `[shader(...)]` attributes and only use the explicitly-specified entry points instead.
@@ -127,7 +127,7 @@ A _component type_ is a unit of shader code composition; both modules and entry 
 A _composite_ component type is formed from a list of other component types (for example, one module and two entry points) and can be used to define a unit of shader code that is meant to be used together.
 
 Once a programmer has formed a composite of all the code they intend to use together, they can query the layout of the shader parameters in that composite, or invoke the linking step to
-resolve all cross module refeerences.
+resolve all cross module references.
 
 ### Linking
 
@@ -146,6 +146,11 @@ Second, different compositions of shader code can result in different layouts, w
 
 The `slangc` tool, included in binary distributions of Slang, is a command-line compiler that can handle most simple compilation tasks.
 `slangc` is intended to be usable as a replacement for tools like `fxc` and `dxc`, and covers most of the same use cases.
+
+### Available Options
+
+See [slangc command line reference](https://github.com/shader-slang/slang/blob/master/docs/command-line-slangc-reference.md) for a complete list of compiler options supported by the `slangc` tool.
+
 
 ### Example
 
@@ -170,7 +175,7 @@ void computeMain(uint3 threadId : SV_DispatchThreadID)
 we can compile the `computeMain()` entry point to SPIR-V using the following command line:
 
 ```bat
-slangc hello-world.slang -entry computeMain -target spirv -o hello-world.spv
+slangc hello-world.slang -target spirv -o hello-world.spv
 ```
 
 ### Source Files and Translation Units
@@ -193,10 +198,15 @@ When using `slangc`, you will typically want to identify which entry point(s) yo
 The `-entry computeMain` option selects an entry point to be compiled to output code in this invocation of `slangc`.
 
 Because the `computeMain()` entry point in this example has a `[shader(...)]` attribute, the compiler is able to deduce that it should be compiled for the `compute` stage.
+
+```bat
+slangc hello-world.slang -target spirv -o hello-world.spv
+```
+
 In code that does not use `[shader(...)]` attributes, a `-entry` option should be followed by a `-stage` option to specify the stage of the entry point:
 
 ```bat
-slangc hello-world.slang -entry computeMain -stage compute -o hello-world.spv
+slangc hello-world.slang -entry computeMain -stage compute -target spirv -o hello-world.spv
 ```
 
 ### Targets
@@ -280,10 +290,6 @@ This allows you to deploy just the `library.slang-module` file to users of the l
 import library;
 ```
 
-### More Options
-
-See [slangc command line reference](https://github.com/shader-slang/slang/blob/master/docs/command-line-slangc-reference.md) for a complete list of compiler options supported by the `slangc` tool.
-
 ### Limitations
 
 The `slangc` tool is meant to serve the needs of many developers, including those who are currently using `fxc`, `dxc`, or similar tools.
@@ -295,6 +301,122 @@ Notable features that Slang supports which cannot be accessed from `slangc` incl
 * Slang allows applications to control the way that shader modules and entry points are composed (which in turn influences their layout); `slangc` currently implements a single default policy for how to generate a composition of shader code.
 
 Applications that need more control over compilation are encouraged to use the C++ compilation API described in the next section.
+
+### Examples of `slangc` usage
+
+#### Compiling using different targets example
+Thinsg like how to use slangc to compile a specific entrypoint defined in .slang file to spirv, to hlsl, to dxil?
+
+In this example, a specific entrypoint from a Slang unit containing multiple entrypoints is compiled to various targets.
+Two pixel shader entrypoints are defined, but only the entrypoint identified in the `-entry` argument is retained; the unreachable entrypoint is removed from the generated output.
+
+```hlsl
+// targets.slang
+
+[shader("pixel")]
+float4 psMain1() : SV_Target
+{
+    return float4(1, 0, 0, 1);
+}
+
+[shader("pixel")]
+float4 psMain2() : SV_Target
+{
+    return float4(0, 1, 0, 1);
+}
+```
+
+* To SPIR-V assembly
+```bat
+slangc targets.slang -entry psMain1 -target spirv-asm -o targets.spvasm
+```
+
+* To HLSL
+```bat
+slangc targets.slang -entry psMain1 -target hlsl -o targets.hlsl
+```
+
+* To DXIL assembly
+```bat
+slangc targets.slang -entry psMain1 -target dxil-asm -profile ps_6_6 -o targets.dxilasm
+```
+
+#### Multiple entrypoints in one slang file example
+How to compile a .slang file containing multiple entrypoints to spirv?
+
+Using the example Slang code above, compile all entrypoints to SPIR-V.
+
+```bat
+slangc targets.slang -entry vsMain -entry psMain -target spirv -o hello-world.spv
+```
+
+#### Creating a standalone executable example
+How to compile a .slang file to standalone executable?
+
+This example compiles and runs a host-callable style Slang unit.
+
+```hlsl
+// cpu.slang
+
+class MyClass
+{
+    int intMember;
+    __init()
+    {
+        intMember = 0;
+    }
+    int method()
+    {
+        printf("method\n");
+        return intMember;
+    }
+}
+
+export __extern_cpp int main()
+{
+    MyClass obj = new MyClass();
+    return obj.method();
+}
+
+```
+
+Compile the above code as standalone executable:
+```bat
+slangc cpu.slang -target executable -o cpu.exe
+```
+
+Execute the resulting executable:
+```bat
+C:\slang> cpu
+method
+
+```
+
+#### Compiling and linking slang-modules
+How to compile a .slang file into a .slang-module?
+How to link together different .slang-module files to produce the final target output (e.g. a spirv)?
+
+
+```hlsl
+// lib.slang
+```
+
+```hlsl
+// entry.slang
+
+import lib
+```
+
+
+
+#### Compiling with debug symbols
+How to compile with debug symbol?
+
+#### Compiling with additional preprocessor macros
+How to specify additional preprocessor macros?
+
+#### How to compile a generic entry point with specific type argument?
+How to compile a generic entry point with specific type argument?
 
 ## Using the Compilation API
 
