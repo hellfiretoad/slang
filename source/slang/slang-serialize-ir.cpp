@@ -195,6 +195,7 @@ Result IRSerialWriter::write(IRModule* module, SerialSourceLocWriter* sourceLocW
                 switch (srcInst->getOp())
                 {
                     // Special handling for the ir const derived types
+                    case kIROp_BlobLit:
                     case kIROp_StringLit:
                     {
                         auto stringLit = static_cast<IRStringLit*>(srcInst);
@@ -790,6 +791,7 @@ Result IRSerialReader::read(const IRSerialData& data, Session* session, SerialSo
                         op, operandCount, prefixSize));
                     break;
                 }
+                case kIROp_BlobLit:
                 case kIROp_StringLit:
                 {
                     SLANG_ASSERT(srcInst.m_payloadType == PayloadType::String_1);

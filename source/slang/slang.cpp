@@ -943,7 +943,7 @@ Profile getEffectiveProfile(EntryPoint* entryPoint, TargetRequest* target)
     case CodeGenTarget::DXILAssembly:
         if(targetProfile.getFamily() != ProfileFamily::DX)
         {
-            targetProfile.setVersion(ProfileVersion::DX_5_1);
+            targetProfile.setVersion(ProfileVersion::DX_6_1);
         }
         break;
     case CodeGenTarget::Metal:

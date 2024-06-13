@@ -425,6 +425,10 @@ void initCommandOptions(CommandOptions& options)
         "A path to a specific spirv.core.grammar.json to use when generating SPIR-V output" },
         { OptionKind::IncompleteLibrary, "-incomplete-library", nullptr,
         "Allow generating code from incomplete libraries with unresolved external functions" },
+        { OptionKind::EmbedDXIL, "-embed-dxil", nullptr,
+        "Embed DXIL into emitted slang-modules for faster linking" },
+        { OptionKind::EmbedSPIRV, "-embed-spirv", nullptr,
+        "Embed SPIR-V into emitted slang-modules for faster linking" },      
 
     };
 
@@ -1713,6 +1717,8 @@ SlangResult OptionsParser::_parse(
             case OptionKind::LoopInversion:
             case OptionKind::UnscopedEnum:
             case OptionKind::PreserveParameters:
+            case OptionKind::EmbedDXIL:
+            case OptionKind::EmbedSPIRV:
                 linkage->m_optionSet.set(optionKind, true);
                 break;
             case OptionKind::MatrixLayoutRow:

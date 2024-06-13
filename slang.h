@@ -896,6 +896,8 @@ extern "C"
             EmitSpirvDirectly,          // bool
             SPIRVCoreGrammarJSON,       // stringValue0: json path
             IncompleteLibrary,          // bool, when set, will not issue an error when the linked program has unresolved extern function symbols.
+            EmbedDXIL,                  // bool
+            EmbedSPIRV,                 // bool
 
             // Downstream
 

@@ -779,7 +779,7 @@ namespace Slang
             // to clobber it with something to get a default.
             //
             // TODO: This is a huge hack...
-            profile.setVersion(ProfileVersion::DX_5_1);
+            profile.setVersion(ProfileVersion::DX_6_1);
             break;
         }
 
@@ -1905,7 +1905,7 @@ namespace Slang
         // Generate target code any entry points that
         // have been requested for compilation.
         auto entryPointCount = program->getEntryPointCount();
-        if (targetProgram->getOptionSet().getBoolOption(CompilerOptionName::GenerateWholeProgram))
+        if (true || targetProgram->getOptionSet().getBoolOption(CompilerOptionName::GenerateWholeProgram))
         {
             targetProgram->_createWholeProgramResult(getSink(), this);
         }
@@ -2255,6 +2255,33 @@ namespace Slang
     void EndToEndCompileRequest::generateOutput()
     {
         generateOutput(getSpecializedGlobalAndEntryPointsComponentType());
+        
+        // Augment IR with precompiled libraries
+        if (m_containerFormat == ContainerFormat::SlangModule)
+        {
+            auto linkage = getLinkage();
+            auto program = getSpecializedGlobalAndEntryPointsComponentType();
+
+            for (auto targetReq : linkage->targets)
+            {
+                auto targetProgram = program->getTargetProgram(targetReq);
+                                
+                if (targetReq->getTarget() == CodeGenTarget::DXIL &&
+                    targetProgram->getOptionSet().getBoolOption(CompilerOptionName::EmbedDXIL))
+                {
+                    if (const auto artifact = targetProgram->getExistingWholeProgramResult())
+                    {
+                        
+                        ISlangBlob* blob;
+                        artifact->loadBlob(ArtifactKeep::No, &blob);
+                        auto builder = IRBuilder(targetProgram->getOrCreateIRModuleForLayout(getSink()));
+                        // set location?
+                        builder.emitEmbeddedDXIL(blob);
+                        
+                    }
+                }
+            }
+        }
         
         // If we are in command-line mode, we might be expected to actually
         // write output to one or more files here.
